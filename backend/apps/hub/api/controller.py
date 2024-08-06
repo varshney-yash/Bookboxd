@@ -6,6 +6,10 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import requests
 from django.conf import settings
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from hub.models import *
 
 class HomeView(TemplateView):
     template_name = 'hub/book_list.html'
@@ -90,7 +94,38 @@ def book_detail(request, google_books_id):
         context = {'error': 'Book not found'}
         return render(request, 'hub/book_detail.html', context)
 
+@login_required
+@require_POST
+def create_list(request):
+    name = request.POST.get('name')
+    if name:
+        book_list = BookList.objects.create(name=name, user=request.user)
+        return JsonResponse({'success': True, 'id': book_list.id, 'name': book_list.name})
+    else:
+        return JsonResponse({'success': False, 'error': 'List name is required'})
+    
+@login_required
+def manage_lists(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        if name:
+            BookList.objects.create(name=name, user=request.user)
+        return redirect('manage_lists')
 
+    user_lists = BookList.objects.filter(user=request.user).annotate(book_count=Count('listbook'))
+    return render(request, 'hub/manage_list.html', {'user_lists': user_lists})
+
+@login_required
+@require_POST
+def delete_list(request):
+    list_id = request.POST.get('list_id')
+    try:
+        book_list = BookList.objects.get(id=list_id, user=request.user)
+        book_list.delete()
+        return JsonResponse({'success': True})
+    except BookList.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'List not found'})
+    
 class RegisterView(CreateView):
     form_class = UserCreationForm
     success_url = reverse_lazy('login')

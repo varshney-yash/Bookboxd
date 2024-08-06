@@ -185,9 +185,8 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-LOGIN_REDIRECT_URL = "book-list/"
-LOGOUT_REDIRECT_URL = "book-list/"
-LOGOUT_REDIRECT_URL = 'book-list'
+LOGIN_REDIRECT_URL = "home/"
+LOGOUT_REDIRECT_URL = "home/"
 
 WEB_API_KEY = config.get("X_API_KEY", "3283nnq22")
 API_URL = config.get("API_URL", "")
