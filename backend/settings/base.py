@@ -26,6 +26,7 @@ IS_DEBUG_TOOL_ACTIVE = ast.literal_eval(
     config.get("IS_DEBUG_TOOL_ACTIVE", "False")
 )
 
+GOOGLE_API_KEY = os.getenv('GOOLE_API_KEY')
 
 ALLOWED_HOSTS = ["*"]
 

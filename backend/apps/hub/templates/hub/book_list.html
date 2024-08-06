@@ -1,0 +1,137 @@
+{% extends "hub/base.html" %}
+
+{% block title %}Book Search{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+        color: #333;
+    }
+    .container {
+        max-width: 1200px;
+    }
+    .search-container {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    .book-card {
+        background-color: #fff;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        margin-bottom: 20px;
+    }
+    .book-card:hover {
+        transform: translateY(-5px);
+    }
+    .book-card .card-img-top {
+        height: 150px;
+        object-fit: cover;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+    .book-card .card-body {
+        padding: 1rem;
+    }
+    .book-card .card-title {
+        font-size: 1rem;
+        font-weight: bold;
+        margin-bottom: 0.3rem;
+        line-height: 1.2;
+    }
+    .book-card .card-subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
+    }
+    .book-card .card-text {
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
+    }
+    .sort-dropdown {
+        width: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4 text-center">Book Search</h1>
+
+<div class="search-container">
+    <form action="" method="get" class="row g-3">
+        <div class="col-md-8">
+            <input type="text" name="q" class="form-control" placeholder="Search for books..." value="{{ query }}">
+        </div>
+        <div class="col-md-2">
+            <select name="sort" class="form-select sort-dropdown">
+                <option value="relevance" {% if current_sort == 'relevance' %}selected{% endif %}>Relevance</option>
+                <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+        </div>
+    </form>
+</div>
+
+{% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+{% elif books %}
+    <p class="mt-3">Showing {{ books.start_index }} - {{ books.end_index }} of {{ total_results }} results</p>
+    <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-2">
+        {% for book in books %}
+            <div class="col">
+                <div class="card h-100 book-card">
+                    {% if book.thumbnail %}
+                        <img src="{{ book.thumbnail }}" class="card-img-top" alt="{{ book.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title"><a href="{% url 'book_detail' book.google_books_id %}">{{ book.title }}</a></h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ book.authors|join:", " }}</h6>
+                        <p class="card-text">{{ book.description|truncatechars:50 }}</p>
+                        <p class="card-text"><small class="text-muted">Published: {{ book.published_date }}</small></p>
+                        {% if user.is_authenticated %}
+                        <button class="btn btn-sm btn-outline-primary add-to-list" 
+                            data-book-id="{{ book.google_books_id }}" 
+                            data-book-title="{{ book.title }}">Add to List</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    {% if books.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if books.has_previous %}
+                <li class="page-item"><a class="page-link" href="?q={{ query }}&sort={{ current_sort }}&page={{ books.previous_page_number }}">Previous</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+            
+            {% for i in books.paginator.page_range %}
+                {% if books.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }} <span class="sr-only">(current)</span></span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?q={{ query }}&sort={{ current_sort }}&page={{ i }}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if books.has_next %}
+                <li class="page-item"><a class="page-link" href="?q={{ query }}&sort={{ current_sort }}&page={{ books.next_page_number }}">Next</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% elif query %}
+    <div class="alert alert-info">No books found for "{{ query }}".</div>
+{% else %}
+    <div class="alert alert-info">Enter a search term to find books.</div>
+{% endif %}
