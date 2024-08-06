@@ -10,9 +10,10 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from hub.models import *
+from django.db.models import Count
 
 class HomeView(TemplateView):
-    template_name = 'hub/book_list.html'
+    template_name = 'hub/home.html'
     items_per_page = 10
 
     def get_context_data(self, **kwargs):
@@ -125,6 +126,50 @@ def delete_list(request):
         return JsonResponse({'success': True})
     except BookList.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'List not found'})
+
+@login_required
+@require_POST
+def add_to_list(request):
+    book_id = request.POST.get('book_id')
+    list_ids = request.POST.getlist('list_ids[]')
+    if not book_id or not list_ids:
+        return JsonResponse({'success': False, 'error': 'Missing book_id or list_ids'})
+
+    try:
+        user_lists = BookList.objects.filter(user=request.user)
+        for list in user_lists:
+            if str(list.id) in list_ids:
+                ListBook.objects.get_or_create(book_list=list, google_books_id=book_id)
+            else:
+                ListBook.objects.filter(book_list=list, google_books_id=book_id).delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}) 
+
+def explore_lists(request):
+    all_lists = BookList.objects.annotate(book_count=Count('listbook')).select_related('user').order_by('-created_at')
+    
+    context = {
+        'all_lists': all_lists
+    }
+    return render(request, 'hub/explore.html', context)
+
+@login_required
+def get_user_lists(request):
+    book_id = request.GET.get('book_id')
+    user_lists = BookList.objects.filter(user=request.user)
+    
+    lists_data = []
+    for list in user_lists:
+        has_book = ListBook.objects.filter(book_list=list, google_books_id=book_id).exists() if book_id else False
+        lists_data.append({
+            'id': list.id,
+            'name': list.name,
+            'has_book': has_book
+        })
+    
+    return JsonResponse({'lists': lists_data})
+
     
 class RegisterView(CreateView):
     form_class = UserCreationForm
