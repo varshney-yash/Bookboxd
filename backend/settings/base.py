@@ -162,7 +162,8 @@ USE_L10N = True
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 MEDIA_URL = "/media/"
 SITE_ID = 1
-STATIC_URL = "/static/"
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
