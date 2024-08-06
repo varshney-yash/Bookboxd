@@ -135,6 +135,26 @@
 {% else %}
     <div class="alert alert-info">Enter a search term to find books.</div>
 {% endif %}
+<div class="modal fade" id="addToListModal" tabindex="-1" aria-labelledby="addToListModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addToListModalLabel">Add to Lists</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Add "<span id="bookTitle"></span>" to:</p>
+          <form id="addToListForm">
+            {% csrf_token %}
+            <input type="hidden" id="bookId" name="book_id">
+            <div id="listCheckboxes">
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Add to Selected Lists</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 {% block extra_js %}
 <script>

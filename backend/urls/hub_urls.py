@@ -14,5 +14,7 @@ hub_paths = [
     path('create-list/', hub_api_views.create_list, name='create_list'),
     path('explore/', hub_api_views.explore_lists, name='explore_lists'),
     path('list/<int:list_id>', hub_api_views.list_detail, name='list_detail'),
+    path('get-user-lists/', hub_api_views.get_user_lists, name='get_user_lists'),
+    path('add-to-list/', hub_api_views.add_to_list, name='add_to_list'),
     path('like-list/<int:list_id>/', hub_api_views.like_list, name='like_list'),
 ]
