@@ -14,7 +14,7 @@
     <ul class="list-group">
     {% for list in user_lists %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ list.name }}
+          <a href="{% url 'list_detail' list.id %}">{{ list.name }}</a>
             <div>
                 <span class="badge bg-primary rounded-pill me-2">{{ list.book_count }} books</span>
                 <button class="btn btn-danger btn-sm delete-list" data-list-id="{{ list.id }}" data-list-name="{{ list.name }}">Delete</button>
