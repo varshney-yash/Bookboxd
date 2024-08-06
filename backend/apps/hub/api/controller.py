@@ -245,3 +245,9 @@ class CustomLoginView(LoginView):
 
 class CustomLogoutView(LogoutView):
     next_page = '/'
+
+def ping(request):
+    import json
+    from django.http import HttpResponse
+    message = {"status" : "Ok!"}
+    return HttpResponse(json.dumps(message))

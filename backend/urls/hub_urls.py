@@ -17,4 +17,5 @@ hub_paths = [
     path('get-user-lists/', hub_api_views.get_user_lists, name='get_user_lists'),
     path('add-to-list/', hub_api_views.add_to_list, name='add_to_list'),
     path('like-list/<int:list_id>/', hub_api_views.like_list, name='like_list'),
+    path('health/', hub_api_views.ping, name='ping')
 ]
