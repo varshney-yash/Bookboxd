@@ -136,3 +136,54 @@
     <div class="alert alert-info">Enter a search term to find books.</div>
 {% endif %}
 {% endblock %}
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('.add-to-list').click(function() {
+        var bookId = $(this).data('book-id');
+        var bookTitle = $(this).data('book-title');
+        console.log('Book ID:', bookId);
+        console.log('Book Title:', bookTitle);
+        $('#bookId').val(bookId);
+        $('#bookTitle').text(bookTitle);
+        
+        $.get("{% url 'get_user_lists' %}", {book_id: bookId}, function(data) {
+            var listCheckboxes = $('#listCheckboxes');
+            listCheckboxes.empty();
+            $.each(data.lists, function(index, list) {
+                var isChecked = list.has_book ? 'checked' : '';
+                listCheckboxes.append(
+                    '<div class="form-check">' +
+                    '<input class="form-check-input" type="checkbox" name="list_ids[]" value="' + list.id + '" id="list' + list.id + '" ' + isChecked + '>' +
+                    '<label class="form-check-label" for="list' + list.id + '">' + list.name + '</label>' +
+                    '</div>'
+                );
+            });
+            $('#addToListModal').modal('show');
+        });
+    });
+
+    $('#addToListForm').on('submit', function(e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        formData += '&book_id=' + $('#bookId').val();  
+        $.ajax({
+            url: "{% url 'add_to_list' %}",
+            method: "POST",
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    alert("Book added to selected lists successfully!");
+                    $('#addToListModal').modal('hide');
+                } else {
+                    alert("Error: " + response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert("An error occurred: " + error);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -74,7 +74,7 @@
                     <h6 class="card-subtitle mb-2 text-muted">By {{ book_list.user.username }}</h6>
                     <p class="card-text">{{ book_list.book_count }} book{{ book_list.book_count|pluralize }}</p>
                     <p class="card-text"><i class="fas fa-thumbs-up"></i> {{ book_list.likes.count }} Likes</p>
-                    {% comment %} <a href="{% url 'list_detail' book_list.id %}" class="btn btn-primary">View List</a> {% endcomment %}
+                    <a href="{% url 'list_detail' book_list.id %}" class="btn btn-primary">View List</a>
                 </div>
             </div>
         </div>

@@ -219,7 +219,21 @@ def get_user_lists(request):
     
     return JsonResponse({'lists': lists_data})
 
+
+@login_required
+def like_list(request, list_id):
+    book_list = get_object_or_404(BookList, id=list_id)
+    like, created = Like.objects.get_or_create(book_list=book_list, user=request.user)
     
+    if not created:
+        like.delete()
+        liked = False
+    else:
+        liked = True
+    
+    likes_count = Like.objects.filter(book_list=book_list).count()
+    return JsonResponse({'liked': liked, 'likes_count': likes_count})
+
 class RegisterView(CreateView):
     form_class = UserCreationForm
     success_url = reverse_lazy('login')
