@@ -11,6 +11,9 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from hub.models import *
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
+from hub.forms import CommentForm
+
 
 class HomeView(TemplateView):
     template_name = 'hub/home.html'
@@ -25,6 +28,7 @@ class HomeView(TemplateView):
         
         if query:
             api_key = settings.GOOGLE_API_KEY
+            print(api_key)
             url = f'https://www.googleapis.com/books/v1/volumes?q={query}&orderBy={sort}&key={api_key}&maxResults=40'
             
             response = requests.get(url)
@@ -94,6 +98,51 @@ def book_detail(request, google_books_id):
     else:
         context = {'error': 'Book not found'}
         return render(request, 'hub/book_detail.html', context)
+
+def list_detail(request, list_id):
+    book_list = get_object_or_404(BookList, id=list_id)
+    list_books = ListBook.objects.filter(book_list=book_list)
+    comments = Comment.objects.filter(book_list=book_list).order_by('-created_at')
+    likes_count = Like.objects.filter(book_list=book_list).count()
+    user_has_liked = Like.objects.filter(book_list=book_list, user=request.user).exists() if request.user.is_authenticated else False
+    
+    
+    if request.method == 'POST' and request.user.is_authenticated:
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            new_comment = comment_form.save(commit=False)
+            new_comment.book_list = book_list
+            new_comment.user = request.user
+            new_comment.save()
+            return redirect('list_detail', list_id=list_id)
+    else:
+        comment_form = CommentForm()
+
+    books = []
+    for list_book in list_books:
+        api_key = settings.GOOGLE_API_KEY
+        url = f'https://www.googleapis.com/books/v1/volumes/{list_book.google_books_id}?key={api_key}'
+        response = requests.get(url)
+        if response.status_code == 200:
+            book_data = response.json()
+            volume_info = book_data.get('volumeInfo', {})
+            books.append({
+                'google_books_id': list_book.google_books_id,
+                'title': volume_info.get('title', 'No title'),
+                'authors': volume_info.get('authors', ['Unknown']),
+                'thumbnail': volume_info.get('imageLinks', {}).get('thumbnail', ''),
+                'published_date': volume_info.get('publishedDate', 'Unknown'),
+            })
+
+    context = {
+        'book_list': book_list,
+        'books': books,
+        'comments': comments,
+        'comment_form': comment_form,
+        'likes_count': likes_count,
+        'user_has_liked': user_has_liked,
+    }
+    return render(request, 'hub/list_detail.html', context)
 
 @login_required
 @require_POST

@@ -13,4 +13,5 @@ hub_paths = [
     path('delete-list/', hub_api_views.delete_list, name='delete_list'),
     path('create-list/', hub_api_views.create_list, name='create_list'),
     path('explore/', hub_api_views.explore_lists, name='explore_lists'),
+    path('list/<int:list_id>', hub_api_views.list_detail, name='list_detail'),
 ]

@@ -1,0 +1,136 @@
+{% extends "hub/base.html" %}
+
+{% block title %}{{ book_list.name }} | List Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .book-icon {
+        width: 50px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    .book-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .book-info {
+        margin-left: 15px;
+    }
+    .book-title {
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+    .book-authors {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .comment {
+        border-bottom: 1px solid #e0e0e0;
+        padding: 10px 0;
+    }
+    .comment-user {
+        font-weight: bold;
+    }
+    .comment-date {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .like-button {
+        cursor: pointer;
+        user-select: none;
+    }
+    .like-button.liked {
+        color: #007bff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">{{ book_list.name }}</h1>
+    <p>Created by: {{ book_list.user.username }}</p>
+    <p>Total books: {{ books|length }}</p>
+    
+    <div class="mb-3">
+        <span class="like-button {% if user_has_liked %}liked{% endif %}" data-list-id="{{ book_list.id }}">
+            <i class="fas fa-thumbs-up"></i> 
+            <span class="likes-count">{{ likes_count }}</span> Likes
+        </span>
+    </div>
+
+    <h2 class="mt-4 mb-3">Books in this list</h2>
+    <div class="row">
+        {% for book in books %}
+            <div class="col-md-6 col-lg-4">
+                <div class="book-item">
+                    <a href="{% url 'book_detail' book.google_books_id %}">
+                        {% if book.thumbnail %}
+                            <img src="{{ book.thumbnail }}" class="book-icon" alt="{{ book.title }}">
+                        {% else %}
+                            <div class="book-icon bg-light d-flex align-items-center justify-content-center">
+                                <span class="text-muted">No Image</span>
+                            </div>
+                        {% endif %}
+                    </a>
+                    <div class="book-info">
+                        <h5 class="book-title"><a href="{% url 'book_detail' book.google_books_id %}">{{ book.title }}</a></h5>
+                        <p class="book-authors">{{ book.authors|join:", " }}</p>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <p>This list is empty.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <h2 class="mt-5 mb-3">Comments</h2>
+    {% if user.is_authenticated %}
+        <form method="post" class="mb-4">
+            {% csrf_token %}
+            {{ comment_form.as_p }}
+            <button type="submit" class="btn btn-primary">Add Comment</button>
+        </form>
+    {% endif %}
+
+    {% for comment in comments %}
+        <div class="comment">
+            <p class="comment-user">{{ comment.user.username }} <span class="comment-date">on {{ comment.created_at|date:"F d, Y H:i" }}</span></p>
+            <p>{{ comment.content }}</p>
+        </div>
+    {% empty %}
+        <p>No comments yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('.like-button').click(function() {
+        var $this = $(this);
+        var listId = $this.data('list-id');
+        $.ajax({
+            url: '{% url "like_list" book_list.id %}',
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            success: function(data) {
+                if (data.liked) {
+                    $this.addClass('liked');
+                } else {
+                    $this.removeClass('liked');
+                }
+                $this.find('.likes-count').text(data.likes_count);
+            },
+            error: function(xhr, status, error) {
+                console.error("An error occurred:", error);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
