@@ -245,6 +245,8 @@ class CustomLoginView(LoginView):
 
 class CustomLogoutView(LogoutView):
     next_page = '/'
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
 
 def ping(request):
     import json
