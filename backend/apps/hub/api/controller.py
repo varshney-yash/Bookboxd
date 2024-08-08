@@ -243,6 +243,10 @@ class CustomLoginView(LoginView):
     template_name = 'hub/login.html' 
     next_page = '/'
 
+
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_http_methods
+@method_decorator(require_http_methods(["GET", "POST"]), name='dispatch')
 class CustomLogoutView(LogoutView):
     next_page = '/'
     def get(self, request, *args, **kwargs):
